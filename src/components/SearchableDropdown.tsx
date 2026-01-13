@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { TextInput, Box, Paper, ScrollArea, Loader, Text } from '@mantine/core';
 import { useInView } from 'react-intersection-observer';
-import { useProductsInfiniteQuery } from '../hooks/useProductsQuery';
+import { useProductsQuery } from '../hooks/useProductsQuery';
 import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { SearchableDropdownItem } from './SearchableDropdownItem';
@@ -22,25 +22,16 @@ export function SearchableDropdown({
     const allowEmptyQuery = inputValue.length === 0;
 
     const {
-        data,
+        results,
         isLoading,
-        isFetchingNextPage,
-        hasNextPage,
-        fetchNextPage,
-    } = useProductsInfiniteQuery(
-        debouncedQuery,
-        true,
-        SEARCH_CONFIG.PAGE_SIZE,
-        allowEmptyQuery
-    );
-
-    const results = useMemo(() => {
-        if (!data?.pages) return [];
-        return data.pages.flatMap((page) => page.data);
-    }, [data]);
-
-    const hasMore = hasNextPage ?? false;
-    const isLoadingMore = isFetchingNextPage;
+        isFetchingNextPage: isLoadingMore,
+        hasMore,
+        loadMore,
+    } = useProductsQuery(debouncedQuery, {
+        enabled: true,
+        pageSize: SEARCH_CONFIG.PAGE_SIZE,
+        allowEmpty: allowEmptyQuery,
+    });
 
     useEffect(() => {
         if (results.length > 0) {
@@ -102,7 +93,7 @@ export function SearchableDropdown({
         threshold: 0.1,
         onChange: (inView) => {
             if (inView && hasMore && !isLoadingMore && isOpen) {
-                fetchNextPage();
+                loadMore();
             }
         },
     });

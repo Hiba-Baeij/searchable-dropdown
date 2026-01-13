@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Combobox, useCombobox, TextInput, Loader, Text, ScrollArea } from '@mantine/core';
 import { useInView } from 'react-intersection-observer';
 import { useDebounce } from '../hooks/useDebounce';
-import { useProductsInfiniteQuery } from '../hooks/useProductsQuery';
+import { useProductsQuery } from '../hooks/useProductsQuery';
 import { SearchResult } from '../types';
 import { SEARCH_CONFIG } from '../constants';
 
@@ -27,34 +27,16 @@ export function MantineComboboxExample({
     const allowEmptyQuery = value.length === 0;
 
     const {
-        data,
+        results,
         isLoading,
-        isFetchingNextPage,
-        hasNextPage,
-        fetchNextPage,
-    } = useProductsInfiniteQuery(
-        debouncedQuery,
-        true,
-        SEARCH_CONFIG.PAGE_SIZE,
-        allowEmptyQuery
-    );
-
-    // Flatten all pages into a single array
-    const results = useMemo(() => {
-        if (!data?.pages) return [];
-        return data.pages.flatMap((page) => page.data);
-    }, [data]);
-
-    const hasMore = hasNextPage ?? false;
-    const isLoadingMore = isFetchingNextPage;
-
-
-
-    // Load more results for infinite scroll
-    const loadMore = useCallback(() => {
-        if (isLoadingMore || !hasMore) return;
-        fetchNextPage();
-    }, [isLoadingMore, hasMore, fetchNextPage]);
+        isFetchingNextPage: isLoadingMore,
+        hasMore,
+        loadMore,
+    } = useProductsQuery(debouncedQuery, {
+        enabled: true,
+        pageSize: SEARCH_CONFIG.PAGE_SIZE,
+        allowEmpty: allowEmptyQuery,
+    });
 
     const options = useMemo(() => {
         return results.map((item) => (
