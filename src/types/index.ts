@@ -25,10 +25,40 @@ export interface PaginatedResponse {
   total: number;
 }
 
-export interface SearchableDropdownProps {
-  onSelect?: (item: SearchResult) => void;
+import { ReactNode } from 'react';
+
+export interface SearchableDropdownProps<T = SearchResult> {
+  onSelect?: (item: T) => void;
   onSearch?: () => void;
   placeholder?: string;
   minLength?: number;
-  debounceMs?: number;
+  // Data props
+  results: T[];
+  isLoading: boolean;
+  isFetchingNextPage: boolean;
+  hasMore: boolean;
+  loadMore: () => void;
+  query: string;
+  onQueryChange: (query: string) => void;
+  // Item rendering
+  getItemId: (item: T) => string | number;
+  getItemLabel: (item: T) => string;
+  renderItem?: (item: T, index: number, selectedIndex: number, query: string) => ReactNode;
+}
+
+export interface MantineComboboxExampleProps<T = SearchResult> {
+  onSelect?: (item: T) => void;
+  placeholder?: string;
+  // Data props
+  results: T[];
+  isLoading: boolean;
+  isFetchingNextPage: boolean;
+  hasMore: boolean;
+  loadMore: () => void;
+  query: string;
+  onQueryChange: (query: string) => void;
+  // Item rendering
+  getItemId: (item: T) => string | number;
+  getItemLabel: (item: T) => string;
+  renderOption?: (item: T) => ReactNode;
 }

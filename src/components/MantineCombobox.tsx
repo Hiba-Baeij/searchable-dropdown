@@ -1,60 +1,56 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Combobox, useCombobox, TextInput, Loader, Text, ScrollArea } from '@mantine/core';
 import { useInView } from 'react-intersection-observer';
-import { useDebounce } from '../hooks/useDebounce';
-import { useProductsQuery } from '../hooks/useProductsQuery';
-import { SearchResult } from '../types';
+import { MantineComboboxExampleProps, SearchResult } from '../types';
 import { SEARCH_CONFIG } from '../constants';
+import { highlightText } from '../utils/textHighlight';
 
-interface MantineComboboxExampleProps {
-    onSelect?: (item: SearchResult) => void;
-    placeholder?: string;
-}
-
-export function MantineComboboxExample({
+export function MantineCombobox<T = SearchResult>({
     onSelect,
-    placeholder = 'Search for items...'
-}: MantineComboboxExampleProps) {
+    placeholder = 'Search for items...',
+    results,
+    isLoading,
+    isFetchingNextPage: isLoadingMore,
+    hasMore,
+    loadMore,
+    query,
+    onQueryChange,
+    getItemId,
+    getItemLabel,
+    renderOption,
+}: MantineComboboxExampleProps<T>) {
     const [value, setValue] = useState('');
-
-    const debouncedQuery = useDebounce(value, SEARCH_CONFIG.DEFAULT_DEBOUNCE_MS);
 
     const combobox = useCombobox({
         onDropdownClose: () => combobox.resetSelectedOption(),
     });
 
-    // Allow empty queries to fetch initial 10 items when combobox opens
-    const allowEmptyQuery = value.length === 0;
-
-    const {
-        results,
-        isLoading,
-        isFetchingNextPage: isLoadingMore,
-        hasMore,
-        loadMore,
-    } = useProductsQuery(debouncedQuery, {
-        enabled: true,
-        pageSize: SEARCH_CONFIG.PAGE_SIZE,
-        allowEmpty: allowEmptyQuery,
-    });
-
     const options = useMemo(() => {
-        return results.map((item) => (
-            <Combobox.Option value={item.id.toString()} key={item.id}>
-                <Text size="sm" fw={500}>
-                    {item.title}
-                </Text>
-                <Text size="xs" c="dimmed">
-                    ${item.price.toFixed(2)} • {item.category.name}
-                </Text>
-            </Combobox.Option>
-        ));
-    }, [results]);
+        return results.map((item) => {
+            const itemId = getItemId(item).toString();
+            return (
+                <Combobox.Option value={itemId} key={itemId}>
+                    {renderOption ? (
+                        renderOption(item)
+                    ) : (
+                        <>
+                            <Text size="sm" fw={400}>
+                                {highlightText(getItemLabel(item), query)}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                                ${(item as SearchResult).price.toFixed(2)} • {(item as SearchResult).category.name}
+                            </Text>
+                        </>
+                    )}
+                </Combobox.Option>
+            );
+        });
+    }, [results, getItemId, getItemLabel, renderOption, query]);
 
     const handleOptionSubmit = (val: string) => {
-        const selectedItem = results.find((item) => item.id.toString() === val);
+        const selectedItem = results.find((item) => getItemId(item).toString() === val);
         if (selectedItem) {
-            setValue(selectedItem.title);
+            setValue(getItemLabel(selectedItem));
             combobox.closeDropdown();
             onSelect?.(selectedItem);
         }
@@ -68,7 +64,7 @@ export function MantineComboboxExample({
         if (scrollElement) {
             scrollElement.scrollTop = 0;
         }
-    }, [debouncedQuery]);
+    }, [query]);
 
     // Get scroll viewport element for IntersectionObserver root
     const scrollViewport = useMemo(() => {
@@ -97,13 +93,16 @@ export function MantineComboboxExample({
             store={combobox}
             onOptionSubmit={handleOptionSubmit}
             withinPortal={false}
+        //if I want to add config in this combobox from Mantine ui Combobox
         >
             <Combobox.Target>
                 <TextInput
                     placeholder={placeholder}
                     value={value}
                     onChange={(event) => {
-                        setValue(event.currentTarget.value);
+                        const newValue = event.currentTarget.value;
+                        setValue(newValue);
+                        onQueryChange(newValue);
                         combobox.openDropdown();
                     }}
                     onClick={() => combobox.openDropdown()}
@@ -125,7 +124,7 @@ export function MantineComboboxExample({
                         ref={scrollAreaRef}
                         h={SEARCH_CONFIG.DROPDOWN_MAX_HEIGHT}
                     >
-                        {results.length === 0 && !isLoading && value.length >= SEARCH_CONFIG.MIN_SEARCH_LENGTH && (
+                        {results.length === 0 && !isLoading && query.length >= SEARCH_CONFIG.MIN_SEARCH_LENGTH && (
                             <Text size="sm" c="dimmed" p="md" ta="center">
                                 No results found
                             </Text>

@@ -1,8 +1,7 @@
 import { useState, lazy, Suspense } from 'react';
 import { Container, Loader } from '@mantine/core';
 import { Header } from './components/Header';
-import { SearchSectionManual } from './components/SearchSectionManual';
-import { SearchSectionMantine } from './components/SearchSectionMantine';
+import { SearchSection } from './components/SearchSection';
 import { SelectedItemCard } from './components/SelectedItemCard';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { SearchResult } from './types';
@@ -28,8 +27,7 @@ function App() {
       <Container size="lg" py="xl">
         <Header />
 
-        <SearchSectionManual onSelect={handleSelect} />
-        <SearchSectionMantine onSelect={handleSelect} />
+        <SearchSection onSelect={handleSelect} />
 
         <SelectedItemCard item={selectedItem} />
 

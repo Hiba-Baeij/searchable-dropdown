@@ -2,19 +2,19 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { SearchResult } from '../types';
 import { KEYBOARD_KEYS } from '../constants';
 
-interface UseKeyboardNavigationOptions {
+interface UseKeyboardNavigationOptions<T = SearchResult> {
     isOpen: boolean;
-    results: SearchResult[];
-    onSelect: (item: SearchResult) => void;
+    results: T[];
+    onSelect: (item: T) => void;
     onClose: () => void;
 }
 
-export function useKeyboardNavigation({
+export function useKeyboardNavigation<T = SearchResult>({
     isOpen,
     results,
     onSelect,
     onClose,
-}: UseKeyboardNavigationOptions) {
+}: UseKeyboardNavigationOptions<T>) {
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 

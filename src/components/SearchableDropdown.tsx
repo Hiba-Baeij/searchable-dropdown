@@ -1,57 +1,41 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { TextInput, Box, Paper, ScrollArea, Loader, Text } from '@mantine/core';
 import { useInView } from 'react-intersection-observer';
-import { useProductsQuery } from '../hooks/useProductsQuery';
-import { useDebounce } from '../hooks/useDebounce';
 import { useKeyboardNavigation } from '../hooks/useKeyboardNavigation';
 import { SearchableDropdownItem } from './SearchableDropdownItem';
 import { SearchableDropdownProps, SearchResult } from '../types';
 import { SEARCH_CONFIG, ARIA_LABELS } from '../constants';
 
-export function SearchableDropdown({
+export function SearchableDropdown<T = SearchResult>({
     onSelect,
     placeholder = 'Search...',
-    debounceMs = SEARCH_CONFIG.DEFAULT_DEBOUNCE_MS,
-}: SearchableDropdownProps) {
+    results,
+    isLoading,
+    isFetchingNextPage: isLoadingMore,
+    hasMore,
+    loadMore,
+    query,
+    onQueryChange,
+    getItemId,
+    getItemLabel,
+    renderItem,
+}: SearchableDropdownProps<T>) {
     const [inputValue, setInputValue] = useState('');
     const [isOpen, setIsOpen] = useState(false);
 
-    const debouncedQuery = useDebounce(inputValue, debounceMs);
-
-    // Allow empty queries to fetch initial 10 items when dropdown opens
-    const allowEmptyQuery = inputValue.length === 0;
-
-    const {
-        results,
-        isLoading,
-        isFetchingNextPage: isLoadingMore,
-        hasMore,
-        loadMore,
-    } = useProductsQuery(debouncedQuery, {
-        enabled: true,
-        pageSize: SEARCH_CONFIG.PAGE_SIZE,
-        allowEmpty: allowEmptyQuery,
-    });
-
-    useEffect(() => {
-        if (results.length > 0) {
-            setIsOpen(true);
-        } else if (inputValue.length > 0 && results.length === 0 && !isLoading) {
-            setIsOpen(false);
-        }
-    }, [inputValue.length, results.length, isLoading]);
-
     const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        setInputValue(event.target.value);
-    }, []);
+        const newValue = event.target.value;
+        setInputValue(newValue);
+        onQueryChange(newValue);
+    }, [onQueryChange]);
 
     const handleSelect = useCallback(
-        (item: SearchResult) => {
-            setInputValue(item.title);
+        (item: T) => {
+            setInputValue(getItemLabel(item));
             setIsOpen(false);
             onSelect?.(item);
         },
-        [onSelect]
+        [onSelect, getItemLabel]
     );
 
     const handleFocus = useCallback(() => {
@@ -74,7 +58,7 @@ export function SearchableDropdown({
         if (scrollElement) {
             scrollElement.scrollTop = 0;
         }
-    }, [debouncedQuery]);
+    }, [query]);
 
     // Get scroll viewport element for IntersectionObserver root
     const scrollViewport = useMemo(() => {
@@ -99,7 +83,7 @@ export function SearchableDropdown({
     });
 
     const { selectedIndex, handleKeyDown, handleMouseEnter, setItemRef } =
-        useKeyboardNavigation({
+        useKeyboardNavigation<T>({
             isOpen,
             results,
             onSelect: handleSelect,
@@ -145,18 +129,36 @@ export function SearchableDropdown({
                                     </Text>
                                 </Box>
                             )}
-                            {results.map((item, index) => (
-                                <SearchableDropdownItem
-                                    key={item.id}
-                                    item={item}
-                                    index={index}
-                                    selectedIndex={selectedIndex}
-                                    query={debouncedQuery}
-                                    onSelect={handleSelect}
-                                    onMouseEnter={handleMouseEnter}
-                                    setItemRef={setItemRef}
-                                />
-                            ))}
+                            {results.map((item, index) => {
+                                if (renderItem) {
+                                    return (
+                                        <Box
+                                            key={getItemId(item)}
+                                            ref={(el) => setItemRef(index, el as HTMLDivElement | null)}
+                                            onMouseEnter={() => handleMouseEnter(index)}
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                handleSelect(item);
+                                            }}
+                                        >
+                                            {renderItem(item, index, selectedIndex, query)}
+                                        </Box>
+                                    );
+                                }
+                                // Default rendering for SearchResult type
+                                return (
+                                    <SearchableDropdownItem
+                                        key={getItemId(item)}
+                                        item={item as SearchResult}
+                                        index={index}
+                                        selectedIndex={selectedIndex}
+                                        query={query}
+                                        onSelect={handleSelect as (item: SearchResult) => void}
+                                        onMouseEnter={handleMouseEnter}
+                                        setItemRef={setItemRef}
+                                    />
+                                );
+                            })}
 
                             {hasMore && (
                                 <div
