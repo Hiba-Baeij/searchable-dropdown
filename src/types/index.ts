@@ -1,22 +1,22 @@
-export interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  image: string;
-  creationAt: string;
-  updatedAt: string;
-}
-
 export interface SearchResult {
   id: number;
-  title: string;
-  slug: string;
-  price: number;
-  description: string;
-  category: Category;
-  images: string[];
-  creationAt: string;
-  updatedAt: string;
+  name: string;
+  status: string;
+  species: string;
+  type: string;
+  gender: string;
+  origin: {
+    name: string;
+    url: string;
+  };
+  location: {
+    name: string;
+    url: string;
+  };
+  image: string;
+  episode: string[];
+  url: string;
+  created: string;
 }
 
 export interface PaginatedResponse {
@@ -32,7 +32,6 @@ export interface SearchableDropdownProps<T = SearchResult> {
   onSearch?: () => void;
   placeholder?: string;
   minLength?: number;
-  // Data props
   results: T[];
   isLoading: boolean;
   isFetchingNextPage: boolean;
@@ -40,7 +39,6 @@ export interface SearchableDropdownProps<T = SearchResult> {
   loadMore: () => void;
   query: string;
   onQueryChange: (query: string) => void;
-  // Item rendering
   getItemId: (item: T) => string | number;
   getItemLabel: (item: T) => string;
   renderItem?: (item: T, index: number, selectedIndex: number, query: string) => ReactNode;
@@ -49,7 +47,6 @@ export interface SearchableDropdownProps<T = SearchResult> {
 export interface MantineComboboxExampleProps<T = SearchResult> {
   onSelect?: (item: T) => void;
   placeholder?: string;
-  // Data props
   results: T[];
   isLoading: boolean;
   isFetchingNextPage: boolean;
@@ -57,7 +54,6 @@ export interface MantineComboboxExampleProps<T = SearchResult> {
   loadMore: () => void;
   query: string;
   onQueryChange: (query: string) => void;
-  // Item rendering
   getItemId: (item: T) => string | number;
   getItemLabel: (item: T) => string;
   renderOption?: (item: T) => ReactNode;

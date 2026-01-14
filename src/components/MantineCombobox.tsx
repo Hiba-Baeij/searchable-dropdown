@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Combobox, useCombobox, TextInput, Loader, Text, ScrollArea } from '@mantine/core';
+import { Combobox, useCombobox, TextInput, Loader, Text, ScrollArea, ActionIcon } from '@mantine/core';
 import { useInView } from 'react-intersection-observer';
 import { MantineComboboxExampleProps, SearchResult } from '../types';
 import { SEARCH_CONFIG } from '../constants';
@@ -38,7 +38,7 @@ export function MantineCombobox<T = SearchResult>({
                                 {highlightText(getItemLabel(item), query)}
                             </Text>
                             <Text size="xs" c="dimmed">
-                                ${(item as SearchResult).price.toFixed(2)} • {(item as SearchResult).category.name}
+                                {(item as SearchResult).status} • {(item as SearchResult).species}
                             </Text>
                         </>
                     )}
@@ -54,6 +54,12 @@ export function MantineCombobox<T = SearchResult>({
             combobox.closeDropdown();
             onSelect?.(selectedItem);
         }
+    };
+
+    const handleClear = () => {
+        setValue('');
+        onQueryChange('');
+        combobox.closeDropdown();
     };
 
     const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -93,7 +99,6 @@ export function MantineCombobox<T = SearchResult>({
             store={combobox}
             onOptionSubmit={handleOptionSubmit}
             withinPortal={false}
-        //if I want to add config in this combobox from Mantine ui Combobox
         >
             <Combobox.Target>
                 <TextInput
@@ -103,18 +108,31 @@ export function MantineCombobox<T = SearchResult>({
                         const newValue = event.currentTarget.value;
                         setValue(newValue);
                         onQueryChange(newValue);
-                        combobox.openDropdown();
+                        if (newValue) {
+                            combobox.openDropdown();
+                        } else {
+                            combobox.closeDropdown();
+                        }
                     }}
                     onClick={() => combobox.openDropdown()}
                     onFocus={() => combobox.openDropdown()}
                     rightSection={
                         isLoading ? (
                             <Loader size={16} />
+                        ) : value ? (
+                            <ActionIcon
+                                size="sm"
+                                variant="transparent"
+                                onClick={handleClear}
+                                aria-label="Clear"
+                            >
+                                ×
+                            </ActionIcon>
                         ) : (
                             <Combobox.Chevron />
                         )
                     }
-                    rightSectionPointerEvents="none"
+                    rightSectionPointerEvents={isLoading ? 'none' : 'auto'}
                 />
             </Combobox.Target>
 

@@ -37,7 +37,7 @@ export function SelectedItemCard({ item }: SelectedItemCardProps) {
                                     Selected Item
                                 </Text>
                                 <Text size="xl" fw={700} mb="xs">
-                                    {item.title}
+                                    {item.name}
                                 </Text>
                             </Box>
                             <Badge color="blue" size="lg" variant="light">
