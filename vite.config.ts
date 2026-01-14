@@ -8,17 +8,15 @@ export default defineConfig({
     }),
   ],
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'mantine-core': ['@mantine/core'],
-          'mantine-hooks': ['@mantine/hooks'],
-        }
-      },
-    },
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true,
+    },
+    target: 'esnext',
+    minify: 'esbuild',
+    // Ensure proper module format
+    modulePreload: {
+      polyfill: true,
     },
   },
   optimizeDeps: {
