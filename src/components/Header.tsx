@@ -36,7 +36,7 @@ export function Header() {
                 </Anchor>
 
                 <Anchor
-                    href="https://github.com/Hiba-Baeij/searchable-dropdown-.git"
+                    href="https://github.com/Hiba-Baeij/searchable-dropdown.git"
                     target="_blank"
                     rel="noopener noreferrer"
                     size="sm"
